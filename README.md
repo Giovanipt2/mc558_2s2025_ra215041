@@ -30,8 +30,8 @@ Este projeto implementa e compara cinco abordagens diferentes para resolver o pr
 5. **Programação Linear** - Formulação como problema de fluxo de custo mínimo (requer Gurobi)
 
 O projeto oferece duas formas de uso:
-- **Modo Interativo** (`main.py`) - Interface para avaliadores testarem os algoritmos
-- **Modo Benchmark** (`benchmark_runner.py`) - Sistema completo de avaliação de desempenho com geração de relatórios e gráficos
+- **Modo Interativo** (`main.py`) - Interface recomendada para testar os algoritmos com qualquer entrada
+- **Modo Benchmark** (`benchmark_runner.py`) - Sistema completo de avaliação de desempenho com geração de tabelas e gráficos de resultados com base em casos teste fornecidos previamente
 
 ---
 
@@ -100,15 +100,15 @@ O projeto oferece duas formas de uso:
 
 - **Estrutura de dados:** Buckets lineares (array de listas)
 - **Pesos:** Inteiros (arredonda doubles para o inteiro mais próximo)
-- **Complexidade:** O(V + E + N×C) onde C é o maior peso
-- **Uso:** Eficiente quando C é pequeno (C << N)
+- **Complexidade:** O(V + E + V×C) onde C é o maior peso
+- **Uso:** Eficiente quando C é pequeno (C << V)
 - **Observação:** Arredondamento pode causar pequenas diferenças nos resultados
 
 ### 4. BiDial Dijkstra (`biDialDijkstra.cpp`)
 
 - **Estrutura de dados:** Buckets lineares para ambas direções
 - **Pesos:** Inteiros
-- **Complexidade:** O(V + E + N×C)
+- **Complexidade:** O(V + E + V×C)
 - **Uso:** Combina vantagens de busca bidirecional com buckets
 - **Observação:** Pode ser mais lento que algoritmos básicos quando C é grande
 
@@ -203,7 +203,7 @@ output/arq01.out ... arq10.out
 
 ---
 
-## ▶️ Execução Interativa (Para Avaliadores)
+## ▶️ Execução Interativa
 
 O sistema oferece uma interface interativa para facilitar a avaliação dos algoritmos.
 
@@ -394,7 +394,7 @@ O arquivo `comparison_all_algorithms.png` mostra:
 
 **Exemplos:**
 ```
-5.000000
+5.000
 ```
 
 ```
@@ -430,13 +430,13 @@ INF
 
 ### Limitações do Dial em Instâncias Grandes
 
-- Complexidade: O(V + E + N×C) onde C é o maior peso
-- Para instâncias grandes (N > 60.000, C ≈ 500):
+- Complexidade: O(V + E + V×C) onde C é o maior peso
+- Para instâncias grandes (V > 60.000, C ≈ 500):
   - Cria ~30 milhões de buckets
   - Pode ser **mais lento** que Dijkstra clássico
-- Eficiente apenas quando **C << N** (grafos densos com pesos pequenos)
+- Eficiente apenas quando **C << V** (grafos densos com pesos pequenos)
 
-### Timeout do Programação Linear
+### Timeout de Programação Linear
 
 - PL tem timeout de **5 minutos** no sistema de benchmark
 - Instâncias grandes (arq07-arq10) tipicamente excedem esse tempo
@@ -456,7 +456,7 @@ INF
 
 ### Arquivos Principais
 
-- **`main.py`** - Interface interativa para avaliadores testarem algoritmos individualmente
+- **`main.py`** - Interface interativa para realizar testes individuais dos algoritmos
 - **`benchmark_runner.py`** - Sistema automatizado de benchmark com geração de relatórios
 
 ### Implementações C++
