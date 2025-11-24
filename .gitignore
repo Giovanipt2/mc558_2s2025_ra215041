@@ -1,0 +1,30 @@
+# Build artifacts
+build/
+*.o
+*.obj
+*.exe
+*.out
+
+# Input/output test folders
+input/
+output/
+
+# Bench results
+bench/results/
+bench/*.csv
+
+# VSCode
+.vscode/
+
+# mac / linux
+.DS_Store
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
