@@ -2,5 +2,5 @@ Algoritmo,Resultado_Esperado,Resultado_Obtido,Diferenca_Absoluta,Diferenca_Perce
 Dijkstra Clássico,44.0,44.0,0.0,0.000000%,0
 Dijkstra Bidirecional,44.0,44.0,0.0,0.000000%,0
 Dial Dijkstra,44.0,44.0,0.0,0.000000%,0
-BiDial Dijkstra,44.0,44.0,0.0,0.000000%,996
-Programação Linear,44.0,44.0,0.0,0.000000%,2710
+BiDial Dijkstra,44.0,44.0,0.0,0.000000%,0
+Programação Linear,44.0,44.0,0.0,0.000000%,6894

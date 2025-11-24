@@ -1,6 +1,6 @@
 Algoritmo,Resultado_Esperado,Resultado_Obtido,Diferenca_Absoluta,Diferenca_Percentual,Tempo_Execucao_us
-Dijkstra Clássico,794.0,794.0,0.0,0.000000%,8002
-Dijkstra Bidirecional,794.0,794.0,0.0,0.000000%,966
-Dial Dijkstra,794.0,794.0,0.0,0.000000%,186138
-BiDial Dijkstra,794.0,794.0,0.0,0.000000%,456999
-Programação Linear,794.0,TIMEOUT (>1min),N/A,N/A,60000000
+Dijkstra Clássico,794.0,794.0,0.0,0.000000%,4415
+Dijkstra Bidirecional,794.0,794.0,0.0,0.000000%,0
+Dial Dijkstra,794.0,794.0,0.0,0.000000%,148095
+BiDial Dijkstra,794.0,794.0,0.0,0.000000%,343975
+Programação Linear,794.0,TIMEOUT (>5min),N/A,N/A,300000000
