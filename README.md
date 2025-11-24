@@ -41,21 +41,31 @@ O projeto oferece duas formas de uso:
 .
 ├── README.md                      # Este arquivo
 ├── .gitignore                     # Regras para ignorar arquivos
+├── compile_all.ps1                # Script de compilação automática (Windows PowerShell)
 │
-├── main.py                        # Interface interativa para avaliadores
-├── benchmark_runner.py            # Sistema de benchmark automatizado
+├── algorithms/                    # Algoritmos principais + interface interativa
+│   ├── main.py                    # Interface interativa para avaliadores
+│   ├── dijkstra.cpp               # Algoritmo de Dijkstra clássico
+│   ├── dijkstra.exe               # Executável do Dijkstra
+│   ├── biDijkstra.cpp             # Dijkstra bidirecional
+│   ├── biDijkstra.exe             # Executável do Dijkstra bidirecional
+│   ├── dialDijkstra.cpp           # Dial Dijkstra (pesos inteiros)
+│   ├── dialDijkstra.exe           # Executável do Dial
+│   ├── biDialDijkstra.cpp         # BiDial bidirecional
+│   ├── biDialDijkstra.exe         # Executável do BiDial
+│   └── plShortestPath.py          # Programação Linear (Gurobi)
 │
-├── dijkstra.cpp                   # Algoritmo de Dijkstra clássico
-├── biDijkstra.cpp                 # Dijkstra bidirecional
-├── dialDijkstra.cpp               # Dial Dijkstra (pesos inteiros)
-├── biDialDijkstra.cpp             # BiDial bidirecional
-├── plShortestPath.py              # Programação Linear (Gurobi)
-│
-├── dijkstra_benchmark.cpp         # Versão benchmark do Dijkstra clássico
-├── biDijkstra_benchmark.cpp       # Versão benchmark do bidirecional
-├── dialDijkstra_benchmark.cpp     # Versão benchmark do Dial
-├── biDialDijkstra_benchmark.cpp   # Versão benchmark do BiDial
-├── plShortestPath_benchmark.py    # Versão benchmark do PL
+├── benchmarks/                    # Versões benchmark + sistema de benchmark
+│   ├── benchmark_runner.py        # Sistema de benchmark automatizado
+│   ├── dijkstra_benchmark.cpp     # Versão benchmark do Dijkstra
+│   ├── dijkstra_benchmark.exe     # Executável benchmark do Dijkstra
+│   ├── biDijkstra_benchmark.cpp   # Versão benchmark do bidirecional
+│   ├── biDijkstra_benchmark.exe   # Executável benchmark do bidirecional
+│   ├── dialDijkstra_benchmark.cpp # Versão benchmark do Dial
+│   ├── dialDijkstra_benchmark.exe # Executável benchmark do Dial
+│   ├── biDialDijkstra_benchmark.cpp # Versão benchmark do BiDial
+│   ├── biDialDijkstra_benchmark.exe # Executável benchmark do BiDial
+│   └── plShortestPath_benchmark.py # Versão benchmark do PL
 │
 ├── input/                         # Arquivos de entrada (fornecer antes de executar)
 │   ├── arq01.in
@@ -172,22 +182,40 @@ pip install gurobipy matplotlib pandas
 
 ## 🔨 Compilação
 
-### Algoritmos C++ (Uso Direto e Benchmark)
+### Compilação Automática (Recomendado)
 
-Compile todos os algoritmos com os seguintes comandos:
+Use o script de compilação que compila todos os algoritmos automaticamente:
+
+```bash
+# Windows PowerShell
+.\compile_all.ps1
+```
+
+Este script compila:
+- Todos os algoritmos principais em `algorithms/`
+- Todas as versões benchmark em `benchmarks/`
+- Mostra o status de cada compilação com ✓ ou ✗
+
+### Compilação Manual
+
+Se preferir compilar manualmente, use os comandos abaixo:
 
 ```bash
 # Algoritmos principais (para uso direto)
+cd algorithms
 g++ -std=c++17 -O2 dijkstra.cpp -o dijkstra.exe
 g++ -std=c++17 -O2 biDijkstra.cpp -o biDijkstra.exe
 g++ -std=c++17 -O2 dialDijkstra.cpp -o dialDijkstra.exe
 g++ -std=c++17 -O2 biDialDijkstra.cpp -o biDialDijkstra.exe
+cd ..
 
 # Versões benchmark (com medição de tempo)
+cd benchmarks
 g++ -std=c++17 -O2 dijkstra_benchmark.cpp -o dijkstra_benchmark.exe
 g++ -std=c++17 -O2 biDijkstra_benchmark.cpp -o biDijkstra_benchmark.exe
 g++ -std=c++17 -O2 dialDijkstra_benchmark.cpp -o dialDijkstra_benchmark.exe
 g++ -std=c++17 -O2 biDialDijkstra_benchmark.cpp -o biDialDijkstra_benchmark.exe
+cd ..
 ```
 
 **Nota:** No Windows, os executáveis terão extensão `.exe`. No Linux/Mac, omita a extensão.
@@ -215,7 +243,7 @@ source .venv/bin/activate  # Linux/Mac
 .venv\Scripts\activate     # Windows
 
 # Executar interface interativa
-python main.py
+python algorithms/main.py
 ```
 
 ### Fluxo de Uso
@@ -267,10 +295,10 @@ Todos os programas C++ também podem ser executados diretamente via stdin/stdout
 
 ```bash
 # Linux/Mac
-cat input/arq01.in | ./dijkstra
+cat input/arq01.in | ./algorithms/dijkstra
 
 # Windows
-type input\arq01.in | dijkstra.exe
+type input\arq01.in | algorithms\dijkstra.exe
 ```
 
 **Saída:** Apenas um número (a distância mínima) ou `INF` se não houver caminho.
@@ -305,7 +333,7 @@ source .venv/bin/activate  # Linux/Mac
 .venv\Scripts\activate     # Windows
 
 # Executar benchmark
-python benchmark_runner.py
+python benchmarks/benchmark_runner.py
 ```
 
 ### O que o Benchmark Faz
@@ -454,25 +482,25 @@ INF
 
 ## 📝 Resumo dos Arquivos
 
-### Arquivos Principais
+### Organização por Pastas
 
+**`algorithms/`** - Contém os algoritmos principais e a interface interativa
 - **`main.py`** - Interface interativa para realizar testes individuais dos algoritmos
-- **`benchmark_runner.py`** - Sistema automatizado de benchmark com geração de relatórios
-
-### Implementações C++
-
-- **Versões para uso direto:** `dijkstra.cpp`, `biDijkstra.cpp`, `dialDijkstra.cpp`, `biDialDijkstra.cpp`
+- **Implementações C++:** `dijkstra.cpp`, `biDijkstra.cpp`, `dialDijkstra.cpp`, `biDialDijkstra.cpp`
   - Leem de stdin, escrevem apenas resultado em stdout
   - Sem medição de tempo
-  
-- **Versões benchmark:** `*_benchmark.cpp`
+  - Executados via `main.py` ou diretamente
+- **Implementação Python:** `plShortestPath.py`
+  - Versão para uso direto
+  - Executada via `main.py` ou diretamente
+
+**`benchmarks/`** - Contém as versões benchmark e o sistema de benchmark
+- **`benchmark_runner.py`** - Sistema automatizado de benchmark com geração de relatórios
+- **Versões benchmark C++:** `*_benchmark.cpp`
   - Incluem medição precisa de tempo (excluindo I/O)
   - Tempo em stderr, resultado em stdout
-
-### Implementações Python
-
-- **`plShortestPath.py`** - Versão para uso direto
-- **`plShortestPath_benchmark.py`** - Versão com medição de tempo
+- **Versão benchmark Python:** `plShortestPath_benchmark.py`
+  - Versão com medição de tempo
 
 ---
 

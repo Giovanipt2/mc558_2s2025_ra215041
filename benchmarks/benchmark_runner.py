@@ -230,15 +230,17 @@ def run_benchmark():
     Executa o benchmark completo
     """
     # Configurações
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # benchmark_runner.py está em benchmarks/, precisamos subir um nível para a raiz
+    benchmarks_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(benchmarks_dir)
     venv_path = os.path.join(base_dir, '.venv')
     
     algorithms = [
-        ('Dijkstra Clássico', 'dijkstra_benchmark.exe', False),
-        ('Dijkstra Bidirecional', 'biDijkstra_benchmark.exe', False),
-        ('Dial Dijkstra', 'dialDijkstra_benchmark.exe', False),
-        ('BiDial Dijkstra', 'biDialDijkstra_benchmark.exe', False),
-        ('Programação Linear', 'plShortestPath_benchmark.py', True)
+        ('Dijkstra Clássico', os.path.join(benchmarks_dir, 'dijkstra_benchmark.exe'), False),
+        ('Dijkstra Bidirecional', os.path.join(benchmarks_dir, 'biDijkstra_benchmark.exe'), False),
+        ('Dial Dijkstra', os.path.join(benchmarks_dir, 'dialDijkstra_benchmark.exe'), False),
+        ('BiDial Dijkstra', os.path.join(benchmarks_dir, 'biDialDijkstra_benchmark.exe'), False),
+        ('Programação Linear', os.path.join(benchmarks_dir, 'plShortestPath_benchmark.py'), True)
     ]
     
     test_cases = [f'arq{i:02d}' for i in range(1, 11)]
@@ -280,9 +282,8 @@ def run_benchmark():
         for alg_name, alg_executable, is_python in algorithms:
             print(f"  Executando {alg_name}...")
             
-            executable_path = os.path.join(base_dir, alg_executable)
-            if not os.path.exists(executable_path):
-                print(f"    Erro: executável {executable_path} não encontrado")
+            if not os.path.exists(alg_executable):
+                print(f"    Erro: executável {alg_executable} não encontrado")
                 table_data.append([
                     alg_name, expected_result, "N/A", "N/A", "N/A", "N/A"
                 ])
@@ -290,7 +291,7 @@ def run_benchmark():
                 
             # Executa algoritmo
             obtained_result, execution_time = run_algorithm(
-                executable_path, input_file, is_python, 
+                alg_executable, input_file, is_python, 
                 venv_path if is_python else None
             )
             

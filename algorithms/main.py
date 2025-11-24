@@ -89,16 +89,18 @@ def run_algorithm(executable, is_python, input_data):
     Executa o algoritmo selecionado com a entrada fornecida
     Retorna apenas o resultado (distância mínima) ou mensagem de timeout
     """
-    base_dir = Path(__file__).parent
+    # base_dir aponta para algorithms/, então precisamos subir um nível para acessar .venv
+    algorithms_dir = Path(__file__).parent
+    base_dir = algorithms_dir.parent
     
     if is_python:
         venv_python = base_dir / '.venv' / 'Scripts' / 'python.exe'
         if venv_python.exists():
-            cmd = [str(venv_python), str(base_dir / executable)]
+            cmd = [str(venv_python), str(algorithms_dir / executable)]
         else:
-            cmd = ['python', str(base_dir / executable)]
+            cmd = ['python', str(algorithms_dir / executable)]
     else:
-        cmd = [str(base_dir / executable)]
+        cmd = [str(algorithms_dir / executable)]
     
     try:
         result = subprocess.run(
