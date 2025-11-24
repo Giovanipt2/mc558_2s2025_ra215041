@@ -55,7 +55,7 @@ def run_algorithm(executable, input_file, is_python=False, venv_path=None):
                 stdin=f,
                 capture_output=True,
                 text=True,
-                timeout=60  # timeout de 1 minuto (60s)
+                timeout=300  # timeout de 5 minutos (300s)
             )
         
         if result.returncode != 0:
@@ -116,8 +116,8 @@ def run_algorithm(executable, input_file, is_python=False, venv_path=None):
             return float(output), execution_time
             
     except subprocess.TimeoutExpired:
-        print(f"    Timeout executando {executable} (>1min)")
-        return "TIMEOUT", 60000000  # 1 minuto em microssegundos
+        print(f"    Timeout executando {executable} (>5min)")
+        return "TIMEOUT", 300000000  # 5 minutos em microssegundos
     except Exception as e:
         print(f"Erro executando {executable}: {e}")
         return None, None
@@ -299,12 +299,12 @@ def run_benchmark():
                     table_data.append([
                         alg_name,
                         expected_result,
-                        "TIMEOUT (>1min)",
+                        "TIMEOUT (>5min)",
                         "N/A",
                         "N/A",
                         execution_time
                     ])
-                    print(f"    Resultado: TIMEOUT, Tempo: >1min")
+                    print(f"    Resultado: TIMEOUT (>5min)")
                 else:
                     print(f"    Erro: execução falhou")
                     table_data.append([
@@ -328,7 +328,7 @@ def run_benchmark():
             # Armazena tempo para o gráfico geral
             all_results[test_case][alg_name] = execution_time
             
-            print(f"    Resultado: {obtained_result}, Tempo: {execution_time}μs")
+            print(f"    Resultado: {obtained_result}")
         
         # Salva tabela CSV
         csv_path = os.path.join(result_dir, f'{test_case}_results.csv')

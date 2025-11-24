@@ -1,6 +1,6 @@
 # MC558 - Projeto de Implementação: Algoritmos de Caminho Mais Curto
 
-Este repositório contém a implementação e análise comparativa de cinco algoritmos para o problema de caminho mais curto em grafos direcionados com pesos não-negativos.
+Este repositório contém a implementação e análise comparativa de cinco algoritmos para o problema de caminho mais curto em grafos não direcionados com pesos não-negativos.
 
 **Disciplina:** MC558 - Projeto e Análise de Algoritmos II  
 **Semestre:** 2º Semestre de 2025  
@@ -13,9 +13,8 @@ Este repositório contém a implementação e análise comparativa de cinco algo
 - [Algoritmos Implementados](#algoritmos-implementados)
 - [Requisitos](#requisitos)
 - [Compilação](#compilação)
-- [Execução](#execução)
-- [Benchmark](#benchmark)
-- [Geração de Gráficos](#geração-de-gráficos)
+- [Execução Interativa](#execução-interativa)
+- [Sistema de Benchmark](#sistema-de-benchmark)
 - [Formato de Entrada/Saída](#formato-de-entradasaída)
 
 ---
@@ -25,12 +24,14 @@ Este repositório contém a implementação e análise comparativa de cinco algo
 Este projeto implementa e compara cinco abordagens diferentes para resolver o problema de caminho mais curto:
 
 1. **Dijkstra Clássico** - Implementação padrão com priority queue
-2. **Dial's Algorithm** - Otimização do Dijkstra para pesos inteiros pequenos
-3. **Dijkstra Bidirecional** - Busca simultânea da origem e do destino
-4. **Dial Bidirecional** - Combinação da busca bidirecional com Dial
-5. **Programação Linear** - Formulação como problema de fluxo (requer Gurobi)
+2. **Dijkstra Bidirecional** - Busca simultânea da origem e do destino
+3. **Dial Dijkstra** - Otimização do Dijkstra usando buckets para pesos inteiros
+4. **BiDial Dijkstra** - Combinação da busca bidirecional com Dial
+5. **Programação Linear** - Formulação como problema de fluxo de custo mínimo (requer Gurobi)
 
-O projeto inclui um harness de benchmark para comparação de desempenho e scripts para geração de gráficos e análises.
+O projeto oferece duas formas de uso:
+- **Modo Interativo** (`main.py`) - Interface para avaliadores testarem os algoritmos
+- **Modo Benchmark** (`benchmark_runner.py`) - Sistema completo de avaliação de desempenho com geração de relatórios e gráficos
 
 ---
 
@@ -38,30 +39,41 @@ O projeto inclui um harness de benchmark para comparação de desempenho e scrip
 
 ```
 .
-├── README.md                  # Este arquivo
-├── .gitignore                 # Regras para ignorar arquivos
-├── ra215041.pdf              # Relatório do projeto (até 3 páginas)
+├── README.md                      # Este arquivo
+├── .gitignore                     # Regras para ignorar arquivos
 │
-├── dijkstra.cpp              # Algoritmo de Dijkstra clássico
-├── dialDijkstra.cpp          # Algoritmo de Dial (pesos inteiros)
-├── biDijkstra.cpp            # Dijkstra bidirecional
-├── biDialDijkstra.cpp        # Dial bidirecional
-├── plShortestPath.cpp        # Formulação por programação linear
+├── main.py                        # Interface interativa para avaliadores
+├── benchmark_runner.py            # Sistema de benchmark automatizado
 │
-├── bench/                    # Sistema de benchmark
-│   ├── bench.cpp             # Harness de benchmark
-│   ├── run_bench.sh          # Script para executar benchmarks
-│   └── results/              # CSVs e plots gerados (gitignored)
+├── dijkstra.cpp                   # Algoritmo de Dijkstra clássico
+├── biDijkstra.cpp                 # Dijkstra bidirecional
+├── dialDijkstra.cpp               # Dial Dijkstra (pesos inteiros)
+├── biDialDijkstra.cpp             # BiDial bidirecional
+├── plShortestPath.py              # Programação Linear (Gurobi)
 │
-├── scripts/                  # Scripts auxiliares
-│   ├── compile_all.sh        # Compila todos os programas
-│   └── plot_results.py       # Gera gráficos dos resultados
+├── dijkstra_benchmark.cpp         # Versão benchmark do Dijkstra clássico
+├── biDijkstra_benchmark.cpp       # Versão benchmark do bidirecional
+├── dialDijkstra_benchmark.cpp     # Versão benchmark do Dial
+├── biDialDijkstra_benchmark.cpp   # Versão benchmark do BiDial
+├── plShortestPath_benchmark.py    # Versão benchmark do PL
 │
-├── docs/                     # Documentação
-│   └── dependencies.md       # Instruções detalhadas de instalação
+├── input/                         # Arquivos de entrada (fornecer antes de executar)
+│   ├── arq01.in
+│   ├── arq02.in
+│   └── ... arq10.in
 │
-├── input/                    # Arquivos de entrada (local, gitignored)
-└── output/                   # Arquivos de saída esperados (local, gitignored)
+├── output/                        # Arquivos com resultados esperados
+│   ├── arq01.out
+│   ├── arq02.out
+│   └── ... arq10.out
+│
+└── results/                       # Resultados do benchmark (gerado automaticamente)
+    ├── arq01/
+    │   └── arq01_results.csv
+    ├── arq02/
+    │   └── arq02_results.csv
+    ├── ...
+    └── comparison_all_algorithms.png
 ```
 
 ---
@@ -73,208 +85,278 @@ O projeto inclui um harness de benchmark para comparação de desempenho e scrip
 - **Estrutura de dados:** Priority queue (min-heap)
 - **Pesos:** Double (ponto flutuante)
 - **Complexidade:** O((V + E) log V)
-- **Uso:** Grafos gerais com pesos não-negativos
+- **Uso:** Solução padrão para grafos com pesos não-negativos
+- **Característica:** Mantém precisão decimal dos pesos
 
-### 2. Dial's Algorithm (`dialDijkstra.cpp`)
-
-- **Estrutura de dados:** Buckets circulares
-- **Pesos:** Inteiros (arredondamento de doubles)
-- **Complexidade:** O(V + E + C·V) onde C é o maior peso
-- **Uso:** Grafos com pesos inteiros pequenos
-- **Observação:** Pesos são arredondados, pode gerar aproximação
-
-### 3. Dijkstra Bidirecional (`biDijkstra.cpp`)
+### 2. Dijkstra Bidirecional (`biDijkstra.cpp`)
 
 - **Estrutura de dados:** Duas priority queues (forward e backward)
 - **Pesos:** Double
 - **Complexidade:** O((V + E) log V) - mais rápido na prática
-- **Uso:** Grafos grandes onde busca em ambas direções é vantajosa
+- **Uso:** Muito eficiente em grafos grandes
+- **Característica:** Encontro das buscas tipicamente ocorre antes de explorar todo o grafo
 
-### 4. Dial Bidirecional (`biDialDijkstra.cpp`)
+### 3. Dial Dijkstra (`dialDijkstra.cpp`)
 
-- **Estrutura de dados:** Buckets circulares para ambas direções
+- **Estrutura de dados:** Buckets lineares (array de listas)
+- **Pesos:** Inteiros (arredonda doubles para o inteiro mais próximo)
+- **Complexidade:** O(V + E + N×C) onde C é o maior peso
+- **Uso:** Eficiente quando C é pequeno (C << N)
+- **Observação:** Arredondamento pode causar pequenas diferenças nos resultados
+
+### 4. BiDial Dijkstra (`biDialDijkstra.cpp`)
+
+- **Estrutura de dados:** Buckets lineares para ambas direções
 - **Pesos:** Inteiros
-- **Complexidade:** O(V + E + C·V)
-- **Uso:** Combinação das vantagens de Dial e busca bidirecional
+- **Complexidade:** O(V + E + N×C)
+- **Uso:** Combina vantagens de busca bidirecional com buckets
+- **Observação:** Pode ser mais lento que algoritmos básicos quando C é grande
 
-### 5. Programação Linear (`plShortestPath.cpp`)
+### 5. Programação Linear (`plShortestPath.py`)
 
-- **Formulação:** Problema de fluxo unitário
-- **Solver:** Gurobi Optimizer
-- **Variáveis:** x_e ∈ [0,1] para cada aresta
-- **Objetivo:** Minimizar Σ w_e · x_e
-- **Uso:** Validação teórica, não otimizado para performance
+- **Formulação:** Problema de fluxo de custo mínimo
+- **Solver:** Gurobi Optimizer (Python API - gurobipy)
+- **Variáveis:** Fluxo em cada aresta x_e ∈ [0, ∞)
+- **Restrições:** Conservação de fluxo (entrada - saída = demanda)
+- **Objetivo:** Minimizar Σ w_e × x_e
+- **Uso:** Validação teórica e comparação de desempenho
+- **Observação:** Muito mais lento que algoritmos especializados; timeout de 5 minutos em instâncias grandes
 
 ---
 
 ## 💻 Requisitos
 
-### Obrigatórios
+### Para Algoritmos C++ (Obrigatório)
 
 - **Compilador:** GCC/G++ com suporte a C++17
-- **Sistema:** Linux, macOS ou Windows (com MSYS2/MinGW)
+- **Sistema:** Linux, macOS ou Windows (com MSYS2/MinGW ou WSL)
 
-### Opcionais
+### Para Programação Linear e Benchmarks (Obrigatório)
 
-- **Gurobi Optimizer** (para `plShortestPath.cpp`)
-  - Licença acadêmica gratuita disponível
-  - Alternativas: GLPK, CBC (requer adaptação do código)
-- **Python 3.6+** com matplotlib e pandas (para gerar gráficos)
-- **Google Benchmark** (para medições mais rigorosas)
+- **Python 3.8+** 
+- **Ambiente Virtual Python** (recomendado)
+- **Bibliotecas Python:**
+  - `gurobipy` (Gurobi Python API)
+  - `matplotlib` (para gráficos do benchmark)
+  - `pandas` (para processamento de dados do benchmark)
 
-**Consulte [`docs/dependencies.md`](docs/dependencies.md) para instruções detalhadas de instalação.**
+### Instalação do Gurobi
+
+O algoritmo de Programação Linear requer o Gurobi Optimizer:
+
+1. **Baixar Gurobi:** https://www.gurobi.com/downloads/
+2. **Licença Acadêmica:** https://www.gurobi.com/academia/academic-program-and-licenses/
+3. **Instalar gurobipy:**
+   ```bash
+   # No ambiente virtual do projeto
+   python -m pip install gurobipy
+   ```
+
+### Configuração do Ambiente Virtual (Recomendado)
+
+```bash
+# Criar ambiente virtual
+python -m venv .venv
+
+# Ativar (Linux/Mac)
+source .venv/bin/activate
+
+# Ativar (Windows)
+.venv\Scripts\activate
+
+# Instalar dependências
+pip install gurobipy matplotlib pandas
+```
 
 ---
 
 ## 🔨 Compilação
 
-### Compilação Rápida
+### Algoritmos C++ (Uso Direto e Benchmark)
 
-Use o script que compila todos os programas automaticamente:
-
-```bash
-bash scripts/compile_all.sh
-```
-
-### Compilação Manual
-
-#### Algoritmos básicos (sem dependências externas)
+Compile todos os algoritmos com os seguintes comandos:
 
 ```bash
-g++ -std=c++17 -O2 dijkstra.cpp -o dijkstra
-g++ -std=c++17 -O2 dialDijkstra.cpp -o dialDijkstra
-g++ -std=c++17 -O2 biDijkstra.cpp -o biDijkstra
-g++ -std=c++17 -O2 biDialDijkstra.cpp -o biDialDijkstra
+# Algoritmos principais (para uso direto)
+g++ -std=c++17 -O2 dijkstra.cpp -o dijkstra.exe
+g++ -std=c++17 -O2 biDijkstra.cpp -o biDijkstra.exe
+g++ -std=c++17 -O2 dialDijkstra.cpp -o dialDijkstra.exe
+g++ -std=c++17 -O2 biDialDijkstra.cpp -o biDialDijkstra.exe
+
+# Versões benchmark (com medição de tempo)
+g++ -std=c++17 -O2 dijkstra_benchmark.cpp -o dijkstra_benchmark.exe
+g++ -std=c++17 -O2 biDijkstra_benchmark.cpp -o biDijkstra_benchmark.exe
+g++ -std=c++17 -O2 dialDijkstra_benchmark.cpp -o dialDijkstra_benchmark.exe
+g++ -std=c++17 -O2 biDialDijkstra_benchmark.cpp -o biDialDijkstra_benchmark.exe
 ```
 
-#### Programação Linear (com Gurobi)
+**Nota:** No Windows, os executáveis terão extensão `.exe`. No Linux/Mac, omita a extensão.
 
-```bash
-# Configure GUROBI_HOME primeiro
-export GUROBI_HOME=/opt/gurobi120/linux64
+### Preparação dos Arquivos de Teste
 
-# Compile com Gurobi (ajuste o número da versão)
-g++ -std=c++17 -O2 -DUSE_GUROBI plShortestPath.cpp \
-    -I${GUROBI_HOME}/include \
-    -L${GUROBI_HOME}/lib \
-    -lgurobi_c++ -lgurobi120 \
-    -o plShortestPath
+Antes de executar, certifique-se de que as pastas `input/` e `output/` contêm os arquivos de teste fornecidos:
+
 ```
-
-**Nota:** O script `compile_all.sh` detecta automaticamente a versão do Gurobi.
+input/arq01.in ... arq10.in
+output/arq01.out ... arq10.out
+```
 
 ---
 
-## ▶️ Execução
+## ▶️ Execução Interativa (Para Avaliadores)
 
-Todos os programas leem da entrada padrão (`stdin`) e escrevem na saída padrão (`stdout`).
+O sistema oferece uma interface interativa para facilitar a avaliação dos algoritmos.
 
-### Formato de Execução
+### Iniciar o Sistema Interativo
 
 ```bash
-cat input/arquivo.in | ./programa
+# Ativar ambiente virtual (se estiver usando)
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+
+# Executar interface interativa
+python main.py
 ```
 
-### Exemplos
+### Fluxo de Uso
+
+1. **Entrada de Dados**: O sistema solicita que você digite a entrada no formato especificado:
+   ```
+   --- ENTRADA DE DADOS ---
+   Digite a entrada conforme especificado:
+     Linha 1: N M S D
+     Próximas M linhas: U V W
+   ```
+   
+   Após digitar a primeira linha (N M S D) e pressionar Enter, o sistema automaticamente lerá as próximas M linhas. Assim que todas as M arestas forem inseridas, o sistema prossegue automaticamente para a seleção do algoritmo.
+
+2. **Seleção do Algoritmo**: Escolha o algoritmo digitando o número correspondente:
+   ```
+   --- SELEÇÃO DE ALGORITMO ---
+   Digite o número do algoritmo que deseja utilizar:
+   [1] Dijkstra Clássico
+   [2] Dijkstra Bidirecional
+   [3] Dial Dijkstra
+   [4] BiDial Dijkstra
+   [5] Programação Linear (Gurobi)
+   
+   Sua escolha: 
+   ```
+
+3. **Resultado**: O sistema exibe **apenas a distância mínima** encontrada:
+   ```
+   ======================================================================
+   RESULTADO: 48.787
+   ======================================================================
+   ```
+   
+   Ou `TIMEOUT (>5min)` caso o algoritmo exceda 5 minutos (comum para PL em instâncias grandes).
+
+4. **Continuar ou Sair**: O sistema pergunta se deseja testar novamente:
+   ```
+   --- CONTINUAR? ---
+   [1] Sim, quero continuar testando
+   [2] Não, quero sair
+   
+   Sua escolha:
+   ```
+
+### Execução Manual de Algoritmos Individuais
+
+Todos os programas C++ também podem ser executados diretamente via stdin/stdout:
 
 ```bash
-# Dijkstra clássico
+# Linux/Mac
 cat input/arq01.in | ./dijkstra
 
-# Dial
-cat input/arq02.in | ./dialDijkstra
-
-# Bidirecional
-cat input/arq03.in | ./biDijkstra
-
-# Dial Bidirecional
-cat input/arq04.in | ./biDialDijkstra
-
-# Programação Linear (se Gurobi estiver instalado)
-cat input/arq05.in | ./plShortestPath
+# Windows
+type input\arq01.in | dijkstra.exe
 ```
 
-### Saída
-
-Cada programa imprime **apenas um número**: a distância mínima do vértice origem ao destino, ou `INF` se não houver caminho.
+**Saída:** Apenas um número (a distância mínima) ou `INF` se não houver caminho.
 
 ```
-42.500000
-```
-
-ou
-
-```
-INF
+48.787
 ```
 
 ---
 
-## 📊 Benchmark
+## 📊 Sistema de Benchmark
 
-O sistema de benchmark compara o desempenho de todos os algoritmos.
+O sistema de benchmark automatizado compara o desempenho de todos os algoritmos em todas as instâncias de teste.
+
+### Como Funciona o Benchmark
+
+O sistema `benchmark_runner.py` realiza as seguintes operações:
+
+1. **Compilação Automática**: Utiliza as versões `*_benchmark.cpp` e `*_benchmark.py` dos algoritmos
+2. **Medição Precisa**: Mede **apenas o tempo de execução do algoritmo**, excluindo:
+   - Leitura da entrada
+   - Construção das estruturas de dados
+   - Qualquer I/O
+3. **Validação de Resultados**: Compara com resultados esperados em `output/`
+4. **Geração de Relatórios**: Cria CSVs e gráfico comparativo
 
 ### Executar Benchmark Completo
 
 ```bash
-# Compila bench.cpp e executa para todos os arquivos em input/
-bash bench/run_bench.sh
+# Ativar ambiente virtual
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+
+# Executar benchmark
+python benchmark_runner.py
 ```
 
-### Configurações
+### O que o Benchmark Faz
 
-- **Número de repetições:** Editável em `run_bench.sh` (padrão: 10)
-- **Arquivos de entrada:** Todos os `*.in` em `input/`
-- **Resultados:** Salvos em `bench/results/` como CSVs
+Para cada arquivo de teste (`arq01.in` a `arq10.in`), o sistema:
 
-### Benchmark Manual
+1. Executa todos os 5 algoritmos
+2. Mede o tempo de execução em **microssegundos**
+3. Compara resultado obtido vs. resultado esperado
+4. Calcula diferença absoluta e percentual
+5. Salva dados em CSV individual
+6. Gera gráfico comparativo único ao final
 
-```bash
-# Compile o benchmark
-g++ -std=c++17 -O2 bench/bench.cpp -o bench/bench
+### Resultados Gerados
 
-# Execute para um arquivo específico
-./bench/bench input/arq01.in 10 bench/results/results_arq01.csv
+```
+results/
+├── arq01/
+│   └── arq01_results.csv          # Tabela com resultados e tempos
+├── arq02/
+│   └── arq02_results.csv
+├── ...
+├── arq10/
+│   └── arq10_results.csv
+└── comparison_all_algorithms.png   # Gráfico comparativo geral
 ```
 
 ### Estrutura dos CSVs
 
 ```csv
-algorithm,input_file,distance,time_seconds,repetition
-dijkstra,input/arq01.in,42.500000,0.001234,1
-dialDijkstra,input/arq01.in,43,0.000987,1
-...
+Algoritmo,Resultado_Esperado,Resultado_Obtido,Diferenca_Absoluta,Diferenca_Percentual,Tempo_Execucao_us
+Dijkstra Clássico,48.787,48.787,0.0,0.000000%,0
+Dijkstra Bidirecional,48.787,48.787,0.0,0.000000%,0
+Dial Dijkstra,48.787,49.0,0.213,0.436543%,997
+BiDial Dijkstra,48.787,49.0,0.213,0.436543%,998
+Programação Linear,48.787,48.787,0.0,0.000000%,2919
 ```
 
----
+### Gráfico Comparativo
 
-## 📈 Geração de Gráficos
+O arquivo `comparison_all_algorithms.png` mostra:
 
-Após executar o benchmark, gere gráficos comparativos:
+- **Eixo X**: Instâncias de teste (1 a 10)
+- **Eixo Y**: Tempo de execução em milissegundos (escala linear)
+- **Linhas coloridas**: Cada algoritmo com pontos conectados
+- **Legenda**: Identificação de cada algoritmo
 
-```bash
-python3 scripts/plot_results.py
-```
-
-### Gráficos Gerados
-
-Para cada arquivo de entrada:
-
-1. **Tempo de Execução** (`*_execution_time.png`)
-   - Gráfico de barras comparando tempo médio ± desvio padrão
-
-2. **Distâncias Obtidas** (`*_distances.png`)
-   - Comparação das distâncias retornadas por cada algoritmo
-
-3. **Distribuição de Tempo** (`*_time_distribution.png`)
-   - Boxplot mostrando variabilidade dos tempos
-
-4. **Tabela Resumo** (`*_summary.txt`)
-   - Estatísticas detalhadas em formato texto
-
-### Localização
-
-Todos os gráficos são salvos em: `bench/results/plots/`
+**Características do gráfico:**
+- Pontos com tempo 0 (< 1μs) são exibidos
+- PL aparece apenas em instâncias onde não deu timeout (1-6)
+- Facilita visualizar qual algoritmo é mais rápido para cada instância
 
 ---
 
@@ -283,15 +365,17 @@ Todos os gráficos são salvos em: `bench/results/plots/`
 ### Formato de Entrada
 
 **Primeira linha:** `N M S D`
-- `N` = número de vértices (0 a N-1)
-- `M` = número de arestas
-- `S` = vértice origem
-- `D` = vértice destino
+- `N` = número de vértices (numerados de 0 a N-1), onde 5×10⁴ ≤ N ≤ 5×10⁵
+- `M` = número de arestas, onde 2.5×10⁴ ≤ M ≤ 2.5×10⁵
+- `S` = vértice origem (source)
+- `D` = vértice destino (destination)
 
 **Próximas M linhas:** `U V W`
-- `U` = vértice origem da aresta
-- `V` = vértice destino da aresta
-- `W` = peso da aresta (double)
+- `U` = vértice conectado pela aresta
+- `V` = outro vértice conectado pela aresta
+- `W` = custo para percorrer a aresta, onde 100.0 ≤ W ≤ 500.0
+
+**Importante:** O grafo é **não direcionado**. Cada aresta conecta U e V em ambas as direções.
 
 ### Exemplo de Entrada
 
@@ -306,80 +390,95 @@ Todos os gráficos são salvos em: `bench/results/plots/`
 
 ### Formato de Saída
 
-**Saída:** Um único número (distância mínima) ou `INF`
+**Saída:** Apenas um número (distância mínima) ou `INF` se não houver caminho.
 
+**Exemplos:**
 ```
 5.000000
 ```
+
+```
+48.787
+```
+
+```
+INF
+```
+
+**Observação:** Algoritmos Dial e BiDial arredondam pesos para inteiros, então podem retornar valores ligeiramente diferentes (ex: 49.0 ao invés de 48.787).
 
 ---
 
 ## 🔍 Observações Importantes
 
-### Medição de Tempo
+### Medição de Tempo no Benchmark
 
-- As medições de tempo devem ser feitas **após** o carregamento do grafo em memória
-- O programa de benchmark (`bench.cpp`) segue esta diretriz
-- Os programas individuais não imprimem tempo (apenas a distância)
+- As versões `*_benchmark.cpp` e `*_benchmark.py` medem **apenas** o tempo de execução do algoritmo
+- **Excluído da medição:**
+  - Leitura da entrada (`stdin`)
+  - Construção das estruturas de dados (grafo, listas de adjacência)
+  - Escrita da saída (`stdout`)
+- A medição usa `std::chrono::high_resolution_clock` (C++) e `time.perf_counter` (Python)
+- Tempo reportado em **microssegundos** nos CSVs, convertido para milissegundos nos gráficos
 
-### Aproximações
+### Aproximações dos Algoritmos Dial
 
-- **Dial** e **Dial Bidirecional** arredondam pesos para inteiros
+- **Dial Dijkstra** e **BiDial Dijkstra** arredondam pesos para o **inteiro mais próximo**
+- Exemplo: peso 48.787 → arredondado para 49
 - Isso pode resultar em distâncias diferentes dos algoritmos exatos
-- Compare os resultados no CSV gerado pelo benchmark
+- A diferença é pequena (tipicamente < 1%) mas deve ser considerada na análise
 
-### Limitações do Dial
+### Limitações do Dial em Instâncias Grandes
 
-- Se o maior peso `C` for muito grande (> 10^6), a memória pode ser excessiva
-- Um aviso é impresso no stderr se `C` for muito grande
-- Considere usar Dijkstra clássico para grafos com pesos muito variados
+- Complexidade: O(V + E + N×C) onde C é o maior peso
+- Para instâncias grandes (N > 60.000, C ≈ 500):
+  - Cria ~30 milhões de buckets
+  - Pode ser **mais lento** que Dijkstra clássico
+- Eficiente apenas quando **C << N** (grafos densos com pesos pequenos)
 
-### Gurobi
+### Timeout do Programação Linear
 
-- `plShortestPath.cpp` **requer** Gurobi para funcionar
-- Se compilado sem `-DUSE_GUROBI`, o programa imprime instruções de instalação
-- Alternativas open-source (GLPK, CBC) requerem adaptação do código
+- PL tem timeout de **5 minutos** no sistema de benchmark
+- Instâncias grandes (arq07-arq10) tipicamente excedem esse tempo
+- Isso é esperado: LP solvers gerais são muito mais lentos que algoritmos especializados
+- Resultados de PL aparecem apenas para instâncias pequenas (arq01-arq06) no gráfico
 
----
+### Requisitos do Gurobi
 
-## 📚 Documentação Adicional
-
-- **[docs/dependencies.md](docs/dependencies.md)** - Instruções detalhadas de instalação
-- **Cabeçalhos dos arquivos `.cpp`** - Documentação inline de cada algoritmo
-- **Enunciado do projeto** - Consulte `MC558_Projeto_Implementacao_Versao1.pdf`
-
----
-
-## 🧪 Testes Recomendados
-
-### Casos de Teste Básicos
-
-1. **Grafo pequeno conectado** - Verifica corretude básica
-2. **Grafo desconectado** - Verifica detecção de `INF`
-3. **Grafo com peso zero** - Testa casos extremos
-4. **Grafo denso** - Compara desempenho com muitas arestas
-5. **Grafo esparso** - Avalia vantagem de algoritmos bidirecionais
-
-### Configurações de Performance
-
-Para benchmarks mais precisos:
-
-```bash
-# Aumente o limite de arquivos abertos
-ulimit -n 4096
-
-# Execute múltiplas vezes e calcule média/mediana
-for i in {1..20}; do
-    bash bench/run_bench.sh
-done
-```
+- `plShortestPath.py` requer Gurobi Optimizer e licença válida
+- Licença acadêmica gratuita disponível em: https://www.gurobi.com/academia/
+- Biblioteca Python: `pip install gurobipy`
+- Sem Gurobi, o algoritmo PL não funcionará
 
 ---
 
-## 🤝 Contribuições e Uso
+## 📝 Resumo dos Arquivos
 
-Este é um projeto acadêmico para a disciplina MC558. O código é fornecido como referência para estudos.
+### Arquivos Principais
 
-**Autor:** RA 215041  
-**Instituição:** Unicamp  
-**Disciplina:** MC558 - Projeto e Análise de Algoritmos II
+- **`main.py`** - Interface interativa para avaliadores testarem algoritmos individualmente
+- **`benchmark_runner.py`** - Sistema automatizado de benchmark com geração de relatórios
+
+### Implementações C++
+
+- **Versões para uso direto:** `dijkstra.cpp`, `biDijkstra.cpp`, `dialDijkstra.cpp`, `biDialDijkstra.cpp`
+  - Leem de stdin, escrevem apenas resultado em stdout
+  - Sem medição de tempo
+  
+- **Versões benchmark:** `*_benchmark.cpp`
+  - Incluem medição precisa de tempo (excluindo I/O)
+  - Tempo em stderr, resultado em stdout
+
+### Implementações Python
+
+- **`plShortestPath.py`** - Versão para uso direto
+- **`plShortestPath_benchmark.py`** - Versão com medição de tempo
+
+---
+
+## 🤝 Informações do Projeto
+
+**Disciplina:** MC558 - Projeto e Análise de Algoritmos II  
+**Semestre:** 2º Semestre de 2025  
+**RA:** 215041  
+**Instituição:** Universidade Estadual de Campinas (Unicamp)
