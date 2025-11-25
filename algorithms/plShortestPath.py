@@ -59,116 +59,93 @@ def solve_shortest_path_lp():
     """
     
     try:
-        # Lê a primeira linha: N M S D
-        first_line = sys.stdin.readline().strip()
-        if not first_line:
-            print("Erro: não foi possível ler a primeira linha", file=sys.stderr)
+        # LEITURA OTIMIZADA: Lê tudo de uma vez em memória
+        input_data = sys.stdin.read().split()
+        if not input_data:
+            print("Erro: entrada vazia", file=sys.stderr)
             return 1
             
-        parts = first_line.split()
-        if len(parts) != 4:
-            print("Erro: formato inválido na primeira linha", file=sys.stderr)
+        iterator = iter(input_data)
+        
+        try:
+            N = int(next(iterator))
+            M = int(next(iterator))
+            S = int(next(iterator))
+            D = int(next(iterator))
+        except (StopIteration, ValueError):
+            print("Erro: formato inválido no cabeçalho", file=sys.stderr)
             return 1
-            
-        N, M, S, D = map(int, parts)
         
         # Validação dos parâmetros
         if N <= 0 or M < 0 or S < 0 or S >= N or D < 0 or D >= N:
             print("Erro: parâmetros inválidos", file=sys.stderr)
             return 1
-            
-        # Lista para armazenar as arestas (será expandida para grafo não direcionado)
-        edges = []
-        
-        # Lê as arestas
-        for i in range(M):
-            line = sys.stdin.readline().strip()
-            if not line:
-                print(f"Erro: número insuficiente de arestas na linha {i+1}", file=sys.stderr)
-                return 1
-                
-            parts = line.split()
-            if len(parts) != 3:
-                print(f"Erro: formato inválido na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            try:
-                u, v = int(parts[0]), int(parts[1])
-                w = float(parts[2])
-            except ValueError:
-                print(f"Erro: valores inválidos na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            # Validação dos vértices
-            if u < 0 or u >= N or v < 0 or v >= N:
-                print(f"Erro: vértices inválidos na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            # Validação do peso
-            if w < 0.0:
-                print(f"Erro: peso negativo na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            # Como o grafo é não direcionado, adicionamos ambas as direções
-            edges.append((u, v, w))
-            if u != v:  # Evita arestas duplicadas para self-loops
-                edges.append((v, u, w))
         
         # Se origem e destino são iguais
         if S == D:
             print("0")
             return 0
+        
+        # OTIMIZAÇÃO: Estrutura de adjacência e pesos separados
+        # Usa dicionário para vizinhos e pesos (acesso O(1))
+        adj = [[] for _ in range(N)]  # adj[u] = lista de vizinhos de u
+        weights = {}  # weights[(u,v)] = peso da aresta u->v
+        directed_edges = []  # Lista de arestas direcionadas para criar variáveis
+        
+        # Processamento das arestas
+        for _ in range(M):
+            try:
+                u = int(next(iterator))
+                v = int(next(iterator))
+                w = float(next(iterator))
+            except (StopIteration, ValueError):
+                print("Erro: formato inválido nas arestas", file=sys.stderr)
+                return 1
             
+            # Validação
+            if u < 0 or u >= N or v < 0 or v >= N or w < 0.0:
+                print(f"Erro: valores inválidos na aresta ({u}, {v}, {w})", file=sys.stderr)
+                return 1
+            
+            # Grafo não direcionado: adiciona ambas as direções
+            adj[u].append(v)
+            adj[v].append(u)
+            weights[(u, v)] = w
+            weights[(v, u)] = w
+            directed_edges.append((u, v))
+            directed_edges.append((v, u))
+        
         # Cria o modelo de otimização
         model = gp.Model("shortest_path")
         
-        # Suprime output do Gurobi
+        # Configurações do Gurobi otimizadas
         model.setParam('OutputFlag', 0)
         model.setParam('LogToConsole', 0)
+        model.setParam('Method', 0)  # Método Simplex (mais rápido para esse tipo de problema)
+        model.setParam('TimeLimit', 300)  # Timeout de 5 minutos
         
-        # Cria variáveis de fluxo para cada aresta
-        flow_vars = {}
-        for i, (u, v, w) in enumerate(edges):
-            var_name = f"x_{u}_{v}_{i}"
-            flow_vars[(u, v, i)] = model.addVar(
-                lb=0.0,           # Fluxo não negativo
-                ub=1.0,           # Máximo 1 unidade de fluxo
-                obj=w,            # Coeficiente na função objetivo
-                vtype=GRB.CONTINUOUS,
-                name=var_name
-            )
+        # OTIMIZAÇÃO: Criação de variáveis usando dicionário
+        x = {}
+        for u, v in directed_edges:
+            x[u, v] = model.addVar(vtype=GRB.CONTINUOUS, lb=0.0, name=f"x_{u}_{v}")
         
-        # Restrições de conservação de fluxo
-        for vertex in range(N):
-            # Fluxo de saída - fluxo de entrada
-            flow_balance = gp.LinExpr()
+        # Define função objetivo usando quicksum
+        obj = gp.quicksum(x[u, v] * weights[u, v] for u, v in directed_edges)
+        model.setObjective(obj, GRB.MINIMIZE)
+        
+        # CONSTRUÇÃO OTIMIZADA DAS RESTRIÇÕES - Usa lista de adjacência
+        for node in range(N):
+            # Fluxo que sai: soma de x[node, vizinho]
+            outflow = gp.quicksum(x[node, neighbor] for neighbor in adj[node])
+            # Fluxo que entra: soma de x[vizinho, node]
+            inflow = gp.quicksum(x[neighbor, node] for neighbor in adj[node])
             
-            # Adiciona fluxo de saída (aresta sai do vértice)
-            for i, (u, v, w) in enumerate(edges):
-                if u == vertex:
-                    flow_balance += flow_vars[(u, v, i)]
-            
-            # Subtrai fluxo de entrada (aresta chega no vértice)  
-            for i, (u, v, w) in enumerate(edges):
-                if v == vertex:
-                    flow_balance -= flow_vars[(u, v, i)]
-            
-            # Restrição de conservação
-            if vertex == S:
-                # Origem: deve sair 1 unidade líquida
-                model.addConstr(flow_balance == 1, f"flow_balance_{vertex}")
-            elif vertex == D:
-                # Destino: deve chegar 1 unidade líquida
-                model.addConstr(flow_balance == -1, f"flow_balance_{vertex}")
+            if node == S:
+                model.addConstr(outflow - inflow == 1, f"source_{node}")
+            elif node == D:
+                model.addConstr(outflow - inflow == -1, f"dest_{node}")
             else:
-                # Outros vértices: conservação perfeita (entrada = saída)
-                model.addConstr(flow_balance == 0, f"flow_balance_{vertex}")
-        
-        # Define objetivo: minimizar custo total
-        model.setObjective(
-            gp.quicksum(w * flow_vars[(u, v, i)] for i, (u, v, w) in enumerate(edges)),
-            GRB.MINIMIZE
-        )
+                model.addConstr(outflow - inflow == 0, f"flow_{node}")
         
         # Resolve o modelo
         model.optimize()

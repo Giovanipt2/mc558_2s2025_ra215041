@@ -19,105 +19,86 @@ def solve_shortest_path_lp():
     """
     
     try:
-        # Leitura e construção do modelo (NÃO incluso no benchmark)
-        first_line = sys.stdin.readline().strip()
-        if not first_line:
-            print("Erro: não foi possível ler a primeira linha", file=sys.stderr)
+        # LEITURA OTIMIZADA: Lê tudo de uma vez em memória (NÃO incluso no benchmark)
+        input_data = sys.stdin.read().split()
+        if not input_data:
+            print("Erro: entrada vazia", file=sys.stderr)
             return 1
             
-        parts = first_line.split()
-        if len(parts) != 4:
-            print("Erro: formato inválido na primeira linha", file=sys.stderr)
+        iterator = iter(input_data)
+        
+        try:
+            N = int(next(iterator))
+            M = int(next(iterator))
+            S = int(next(iterator))
+            D = int(next(iterator))
+        except (StopIteration, ValueError):
+            print("Erro: formato inválido no cabeçalho", file=sys.stderr)
             return 1
-            
-        N, M, S, D = map(int, parts)
         
         if N <= 0 or M < 0 or S < 0 or S >= N or D < 0 or D >= N:
             print("Erro: parâmetros inválidos", file=sys.stderr)
             return 1
-            
-        edges = []
-        
-        for i in range(M):
-            line = sys.stdin.readline().strip()
-            if not line:
-                print(f"Erro: número insuficiente de arestas na linha {i+1}", file=sys.stderr)
-                return 1
-                
-            parts = line.split()
-            if len(parts) != 3:
-                print(f"Erro: formato inválido na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            try:
-                u, v = int(parts[0]), int(parts[1])
-                w = float(parts[2])
-            except ValueError:
-                print(f"Erro: valores inválidos na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            if u < 0 or u >= N or v < 0 or v >= N or w < 0.0:
-                print(f"Erro: valores inválidos na aresta {i+1}", file=sys.stderr)
-                return 1
-                
-            # Como o grafo é não direcionado, adicionamos ambas as direções
-            edges.append((u, v, w))
-            if u != v:  # Evita arestas duplicadas para self-loops
-                edges.append((v, u, w))
         
         if S == D:
             print("0")
             print("0", file=sys.stderr)  # Tempo zero
             return 0
+        
+        # OTIMIZAÇÃO: Estrutura de adjacência e pesos separados
+        adj = [[] for _ in range(N)]  # adj[u] = lista de vizinhos de u
+        weights = {}  # weights[(u,v)] = peso da aresta u->v
+        directed_edges = []  # Lista de arestas direcionadas
+        
+        # Processamento das arestas
+        for _ in range(M):
+            try:
+                u = int(next(iterator))
+                v = int(next(iterator))
+                w = float(next(iterator))
+            except (StopIteration, ValueError):
+                print("Erro: formato inválido nas arestas", file=sys.stderr)
+                return 1
             
+            if u < 0 or u >= N or v < 0 or v >= N or w < 0.0:
+                print(f"Erro: valores inválidos na aresta ({u}, {v}, {w})", file=sys.stderr)
+                return 1
+            
+            # Grafo não direcionado
+            adj[u].append(v)
+            adj[v].append(u)
+            weights[(u, v)] = w
+            weights[(v, u)] = w
+            directed_edges.append((u, v))
+            directed_edges.append((v, u))
+        
         # Cria o modelo de otimização
         model = gp.Model("shortest_path")
         model.setParam('OutputFlag', 0)
         model.setParam('LogToConsole', 0)
+        model.setParam('Method', 0)  # Método Simplex
+        model.setParam('TimeLimit', 300)  # 5 minutos
         
-        # Configurações agressivas para instâncias grandes
-        model.setParam('TimeLimit', 120)      # Limite de 2 minutos  
-        model.setParam('Threads', 6)          # Usar mais threads
-        model.setParam('MIPFocus', 1)         # Foco em encontrar soluções factíveis
-        model.setParam('Heuristics', 0.9)     # Mais heurísticas
-        model.setParam('Cuts', 3)             # Cortes mais agressivos
-        model.setParam('Presolve', 2)         # Presolve mais agressivo
+        # Criação de variáveis
+        x = {}
+        for u, v in directed_edges:
+            x[u, v] = model.addVar(vtype=GRB.CONTINUOUS, lb=0.0, name=f"x_{u}_{v}")
         
-        # Cria variáveis de fluxo para cada aresta
-        flow_vars = {}
-        for i, (u, v, w) in enumerate(edges):
-            var_name = f"x_{u}_{v}_{i}"
-            flow_vars[(u, v, i)] = model.addVar(
-                lb=0.0,
-                ub=1.0,
-                obj=w,
-                vtype=GRB.CONTINUOUS,
-                name=var_name
-            )
+        # Função objetivo
+        obj = gp.quicksum(x[u, v] * weights[u, v] for u, v in directed_edges)
+        model.setObjective(obj, GRB.MINIMIZE)
         
-        # Restrições de conservação de fluxo
-        for vertex in range(N):
-            flow_balance = gp.LinExpr()
+        # Restrições de fluxo
+        for node in range(N):
+            outflow = gp.quicksum(x[node, neighbor] for neighbor in adj[node])
+            inflow = gp.quicksum(x[neighbor, node] for neighbor in adj[node])
             
-            for i, (u, v, w) in enumerate(edges):
-                if u == vertex:
-                    flow_balance += flow_vars[(u, v, i)]
-            
-            for i, (u, v, w) in enumerate(edges):
-                if v == vertex:
-                    flow_balance -= flow_vars[(u, v, i)]
-            
-            if vertex == S:
-                model.addConstr(flow_balance == 1, f"flow_balance_{vertex}")
-            elif vertex == D:
-                model.addConstr(flow_balance == -1, f"flow_balance_{vertex}")
+            if node == S:
+                model.addConstr(outflow - inflow == 1, f"source_{node}")
+            elif node == D:
+                model.addConstr(outflow - inflow == -1, f"dest_{node}")
             else:
-                model.addConstr(flow_balance == 0, f"flow_balance_{vertex}")
-        
-        model.setObjective(
-            gp.quicksum(w * flow_vars[(u, v, i)] for i, (u, v, w) in enumerate(edges)),
-            GRB.MINIMIZE
-        )
+                model.addConstr(outflow - inflow == 0, f"flow_{node}")
         
         # INÍCIO DO BENCHMARK - medição do tempo do algoritmo apenas
         start_time = time.perf_counter()

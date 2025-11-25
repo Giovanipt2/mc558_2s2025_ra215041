@@ -182,16 +182,13 @@ def create_comprehensive_comparison_plot(all_results, output_dir):
         if alg_name in algorithm_styles:
             style = algorithm_styles[alg_name]
             # Converte tempos para milissegundos
-            # Mantém zero como zero (não filtra)
-            # Filtra apenas timeouts (> 60 segundos = 60000000 us)
             times_ms = []
             test_cases_nums = []
             
             for i, (tc, time_us) in enumerate(zip(data['test_cases'], data['times'])):
-                # Pula apenas timeouts (> 60000ms = 60s)
-                if time_us < 60000000:  # não é timeout
-                    times_ms.append(time_us / divisor)  # converte para ms, mantém 0 como 0
-                    test_cases_nums.append(int(tc.replace('arq', '')))
+                # Plota todos os pontos (incluindo PL nas instâncias grandes)
+                times_ms.append(time_us / divisor)  # converte para ms
+                test_cases_nums.append(int(tc.replace('arq', '')))
             
             if times_ms:
                 plt.plot(test_cases_nums, times_ms, 

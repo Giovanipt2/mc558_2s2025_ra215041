@@ -126,11 +126,19 @@ O projeto oferece duas formas de uso:
 
 - **Formulação:** Problema de fluxo de custo mínimo
 - **Solver:** Gurobi Optimizer (Python API - gurobipy)
-- **Variáveis:** Fluxo em cada aresta x_e ∈ [0, ∞)
-- **Restrições:** Conservação de fluxo (entrada - saída = demanda)
-- **Objetivo:** Minimizar Σ w_e × x_e
+- **Variáveis:** Fluxo em cada aresta x_(u,v) ∈ [0, ∞)
+- **Restrições:** Conservação de fluxo (saída - entrada = demanda)
+- **Objetivo:** Minimizar Σ w_(u,v) × x_(u,v)
+- **Implementação Otimizada:** 
+  - **Estrutura de dados:** Usa lista de adjacência `adj[]` + dicionário de pesos `weights{}` para acesso O(1)
+  - **Variáveis:** Dicionário `x[u,v]` para acesso direto às variáveis de fluxo
+  - **Leitura otimizada:** Lê toda entrada em bloco com `sys.stdin.read()` + iterador
+  - **Construção eficiente:** `gp.quicksum()` para expressões lineares (mais rápido que loops)
+  - **Método Simplex:** `Method=0` (mais eficiente para redes de fluxo que Barrier)
+  - **Complexidade:** O(N + M) para construção do modelo; tempo de solução depende do Simplex
+- **Licença Acadêmica:** Requer licença acadêmica do Gurobi (ilimitada) configurada via `GRB_LICENSE_FILE`
 - **Uso:** Validação teórica e comparação de desempenho
-- **Observação:** Muito mais lento que algoritmos especializados; timeout de 5 minutos em instâncias grandes
+- **Observação:** Mesmo otimizado, 10-100x mais lento que algoritmos especializados; timeout de 5 minutos
 
 ---
 
