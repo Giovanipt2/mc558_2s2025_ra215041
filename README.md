@@ -134,8 +134,8 @@ O projeto oferece duas formas de uso:
   - **Variáveis:** Dicionário `x[u,v]` para acesso direto às variáveis de fluxo
   - **Leitura otimizada:** Lê toda entrada em bloco com `sys.stdin.read()` + iterador
   - **Construção eficiente:** `gp.quicksum()` para expressões lineares (mais rápido que loops)
-  - **Método Simplex:** `Method=0` (mais eficiente para redes de fluxo que Barrier)
-  - **Complexidade:** O(N + M) para construção do modelo; tempo de solução depende do Simplex
+  - **Método Simplex:** `Method=0` (mais eficiente para redes de fluxo em comparação a alguns outros métodos disponíveis no Gurobi)
+  - **Complexidade:** O(V + E) para construção do modelo; tempo de solução depende do Simplex
 - **Licença Acadêmica:** Requer licença acadêmica do Gurobi (ilimitada) configurada via `GRB_LICENSE_FILE`
 - **Uso:** Validação teórica e comparação de desempenho
 - **Observação:** Mesmo otimizado, 10-100x mais lento que algoritmos especializados; timeout de 5 minutos
@@ -471,13 +471,6 @@ INF
   - Cria ~30 milhões de buckets
   - Pode ser **mais lento** que Dijkstra clássico
 - Eficiente apenas quando **C << V** (grafos densos com pesos pequenos)
-
-### Timeout de Programação Linear
-
-- PL tem timeout de **5 minutos** no sistema de benchmark
-- Instâncias grandes (arq07-arq10) tipicamente excedem esse tempo
-- Isso é esperado: LP solvers gerais são muito mais lentos que algoritmos especializados
-- Resultados de PL aparecem apenas para instâncias pequenas (arq01-arq06) no gráfico
 
 ### Requisitos do Gurobi
 
