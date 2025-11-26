@@ -144,6 +144,47 @@ def calculate_differences(expected, obtained):
         
     return abs_diff, percent_diff
 
+def create_consolidated_csv(all_results, results_dir):
+    """
+    Cria CSV consolidado com formato:
+    Algoritmo | Teste 1 (us) | Teste 2 (us) | ... | Teste 10 (us)
+    """
+    # Define ordem dos algoritmos
+    algorithm_order = [
+        'Dijkstra Clássico',
+        'Dijkstra Bidirecional',
+        'Dial Dijkstra',
+        'BiDial Dijkstra',
+        'Programação Linear'
+    ]
+    
+    # Define ordem dos test cases
+    ordered_test_cases = [f'arq{i:02d}' for i in range(1, 11)]
+    
+    # Prepara cabeçalho
+    header = ['Algoritmo'] + [f'Teste {i} (us)' for i in range(1, 11)]
+    
+    # Prepara dados
+    csv_data = []
+    for alg_name in algorithm_order:
+        row = [alg_name]
+        for test_case in ordered_test_cases:
+            if test_case in all_results and alg_name in all_results[test_case]:
+                time_us = all_results[test_case][alg_name]
+                row.append(f'{time_us:.0f}')
+            else:
+                row.append('N/A')
+        csv_data.append(row)
+    
+    # Salva CSV
+    csv_path = os.path.join(results_dir, 'comparison_all_algorithms.csv')
+    with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(header)
+        writer.writerows(csv_data)
+    
+    print(f"  CSV consolidado salvo em: {csv_path}")
+
 def create_comprehensive_comparison_plot(all_results, output_dir):
     """
     Cria gráfico único com todos os algoritmos e todas as instâncias
@@ -351,6 +392,10 @@ def run_benchmark():
     print("\nGerando gráfico geral de comparação...")
     results_dir = os.path.join(base_dir, 'results')
     create_comprehensive_comparison_plot(all_results, results_dir)
+    
+    # Cria CSV consolidado com todos os tempos
+    print("Gerando CSV consolidado de comparação...")
+    create_consolidated_csv(all_results, results_dir)
     
     print("\n=== BENCHMARK CONCLUÍDO ===")
 
