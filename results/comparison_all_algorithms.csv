@@ -1,6 +1,6 @@
 Algoritmo,Teste 1 (us),Teste 2 (us),Teste 3 (us),Teste 4 (us),Teste 5 (us),Teste 6 (us),Teste 7 (us),Teste 8 (us),Teste 9 (us),Teste 10 (us)
-Dijkstra Clássico,0,0,0,0,0,0,5000,9887,5998,8004
-Dijkstra Bidirecional,1,1,1,1,1,1,998,549,1000,1000
-Dial Dijkstra,0,0,0,0,0,0,119775,159416,113128,144328
-BiDial Dijkstra,0,0,0,0,0,0,288074,324852,241534,326515
-Programação Linear,1213,625,818,907,1094,1138,1102898,1845991,1165492,1446300
+Dijkstra Clássico,0,0,0,0,0,0,5000,9017,6008,9019
+Dijkstra Bidirecional,1,1,1,1,1,1,1005,1,1000,1
+Dial Dijkstra,0,0,0,0,0,0,100048,187245,115516,157176
+BiDial Dijkstra,656,0,0,0,0,0,236625,460072,246006,326423
+Programação Linear,11604,1019,1105,1044,1175,1214,1039224,1737242,1268840,1406558
